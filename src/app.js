@@ -117,6 +117,22 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
     }
 });
 
+app.get("/home", async (req, res) => { 
+    const { authorization } = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if(!token) return res.sendStatus(401);
+
+    try {
+        const session = await db.collection("sessions").findOne({ token: token });
+        if (!session) return res.sendStatus(401);
+        
+        const transacoes = await db.collection("transacoes").find({usuarioId: session.usuarioId}).toArray();
+        res.send(transacoes).status(200);
+    } catch (err) {
+        return res.status(500).send(err.message);
+    }
+});
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
