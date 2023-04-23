@@ -4,6 +4,7 @@ import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import joi from 'joi';
 import bcrypt from 'bcrypt';
+import { v4 as uuid } from 'uuid';
 
 const app = express();
 
@@ -39,9 +40,41 @@ app.post("/cadastro", async (req, res) => {
         
         const hash = bcrypt.hashSync(senha, 10);
     
-        await db.collection("usuarios").insertOne({ nome, email, senha: hash });
-        res.sendStatus(201);
+        await db.collection("usuarios").insertOne({ nome: nome, email: email, senha: hash });
+        return res.sendStatus(201);
     } catch (err) {
+        return res.status(500).send(err.message);
+    }
+});
+
+const usuarioLoginSchema = joi.object({
+    email: joi.string().email().required(),
+    senha: joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+});
+
+app.post("/", async (req, res) => {
+    const { email, senha } = req.body;
+
+    const validation = usuarioLoginSchema.validate(req.body, { abortEarly: false });
+    
+    if (validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message);
+        return res.status(422).send(errors);
+    }
+    
+    try{
+        const usuario = await db.collection("usuarios").findOne({ email: email });
+        if (!usuario) return res.sendStatus(404);
+
+        if(bcrypt.compareSync(senha, usuario.senha)) {
+            const token = uuid();
+            
+            await db.collection("sessions").insertOne({usuarioId: usuario._id, token: token})
+            return res.send(token);
+        }else{
+            return res.sendStatus(401);
+        }
+    } catch (err){
         return res.status(500).send(err.message);
     }
 });
