@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import joi from 'joi';
 import bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
+import dayjs from "dayjs";
 
 const app = express();
 
@@ -49,7 +50,7 @@ app.post("/cadastro", async (req, res) => {
 
 const usuarioLoginSchema = joi.object({
     email: joi.string().email().required(),
-    senha: joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+    senha: joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required()
 });
 
 app.post("/", async (req, res) => {
@@ -70,14 +71,52 @@ app.post("/", async (req, res) => {
             const token = uuid();
             
             await db.collection("sessions").insertOne({usuarioId: usuario._id, token: token})
-            return res.send(token);
+            return res.send(token).status(200);
         }else{
             return res.sendStatus(401);
         }
-    } catch (err){
+    } catch (err) { 
         return res.status(500).send(err.message);
     }
 });
+
+const transacaoSchema = joi.object({
+    valor: joi.number().precision(2).positive().strict().required(),
+    descricao: joi.string().required()
+});
+
+app.post("/nova-transacao/:tipo", async (req, res) => {
+    const { tipo } = req.params;
+    const {valor, descricao} = req.body;  
+    const { authorization } = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if(!token) return res.sendStatus(401);
+
+    const validation = transacaoSchema.validate(req.body, { abortEarly: false });
+    
+    if (validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message);
+        return res.status(422).send(errors);
+    }
+
+    try {
+        const session = await db.collection("sessions").findOne({ token: token });
+        if (!session) return res.sendStatus(401);
+        
+        await db.collection("transacoes").insertOne({
+            usuarioId: session.usuarioId,
+            valor: valor,
+            descricao: descricao,
+            tipo: tipo,
+            data: dayjs().format("DD/MM"),
+        });
+        res.sendStatus(201);
+    } catch (err) {
+        return res.status(500).send(err.message);
+    }
+});
+
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
