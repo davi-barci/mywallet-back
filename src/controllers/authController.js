@@ -29,7 +29,7 @@ export async function signIn (req, res) {
             const token = uuid();
             
             await db.collection("sessions").insertOne({usuarioId: usuario._id, token: token})
-            return res.send(token).status(200);
+            return res.send({token:token, nomeUsuario: usuario.nome}).status(200);
         }else{
             return res.sendStatus(401);
         }
