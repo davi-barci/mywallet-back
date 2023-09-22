@@ -20,6 +20,17 @@
 
 <p align="justify">MyWallet is a user-friendly finance application designed to help you effortlessly track your daily financial transactions, enabling you to maintain a clear overview of your financial situation. With MyWallet, you can easily record your income and expenses, and the flexibility to edit or delete any transaction data ensures complete control over your financial records.</p>
 
+## 📸 Mockup
+<div  align="center" >
+<img  src="https://github.com/davi-barci/mywallet-front/assets/121765281/f6c1f970-363b-40aa-a227-5fb730a92e15" alt="mockup">
+</div>
+
+<div  align="center" >
+<img  src="https://github.com/davi-barci/mywallet-front/assets/121765281/72c1c927-0d75-496b-8b85-dfdf6b621532" alt="mockup">
+</div>
+
+Link Front-End: https://github.com/davi-barci/mywallet-front/
+
 ## 🚧 Status of work
 
 ![status](https://github.com/davi-barci/mywallet-front/assets/121765281/ad19d60f-6afe-4d8b-93a7-e3133637523d)
